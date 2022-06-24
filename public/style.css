@@ -1,0 +1,85 @@
+body{
+  word-break: break-word;
+}
+
+#online-users-div{
+  display: inline-block;
+  vertical-align: top;
+  height: 502px;
+  width: 502px;
+}
+
+#online-users{
+  height: 250px;
+  width: 250px;
+  margin: auto;
+  margin-top: 120px;
+  box-shadow: 0px 0px 10px 5px green;
+  background-color: lightgreen;
+  overflow-y: scroll;
+}
+
+#chat-div{
+  display: inline-block;
+  vertical-align: top;
+  height: 500px;
+  width: 500px;
+  margin: auto;
+}
+
+#chat{
+  height: 420px;
+  width: 500px;
+  box-shadow: 0px 0px 5px 5px purple;
+  background-color: #D9027D;
+  overflow-y: scroll;
+}
+
+#added-users-div{
+  display: inline-block;
+  vertical-align: top;
+  height: 502px;
+  width: 502px;
+}
+
+#added-users{
+  height: 250px;
+  width: 250px;
+  margin: auto;
+  margin-top: 120px;
+  box-shadow: 0px 0px 10px 5px blue;
+  background-color: lightblue;
+  overflow-y: scroll;
+}
+
+
+form{
+  height: 50px;
+  width: 500px;
+  margin: auto;
+}
+
+textarea{
+  width: 495px;
+  height: 80px;
+  background-color: #00FFFF;
+  box-shadow: 0px 0px 5px 5px purple;
+  color: purple;
+  font-size: 18px;
+  font-weight: bold;
+  resize: none;
+  border: 1px solid #00FFFF;
+}
+
+#submit{
+  width: 200px;
+  height: 50px;
+  margin-left:150px;
+  margin-top: 5px;
+  background-color: purple;
+  border: 1px solid purple;
+  border-radius: 5px;
+  font-size: 20px;
+  font-weight: bold;
+  color: floralwhite;
+}
