@@ -29,34 +29,55 @@ if (seo.url === "glitch-default") {
 }
 
 
-io.on('connection', (socket) => {
-  console.log('a user connected ->', socket.id);
+class User {
+  constructor(socket){
+    this.socket = socket;
+    this.socket.emit("connected", {id: this.socket.id, users: users});
+  }
   
-  socket.emit("connected", {id: socket.id, users: users});
-  
-  socket.on("submit name", (response) => {
-    if(Object.values(users).indexOf(response) != -1){
-      socket.emit("name registered", response);
+  registerUser(name){
+    if(Object.values(users).indexOf(name) != -1){
+      this.socket.emit("name registered", name);
     } else {
-      users[socket.id] = response;
-      socket.broadcast.emit("submitted name", {name: response, id: socket.id});
+      users[this.socket.id] = name;
+      this.socket.broadcast.emit("submitted name", {name: name, 
+                                                    id: this.socket.id});
     }
-  });
+  }
   
-  socket.on("send message", (response) => {
+  sendMessage(response){
     const {message, usersAddedToChat} = response;
     
     for(let id in usersAddedToChat){
-      socket.broadcast.to(id).emit("sended message", {message: message, 
-                                                      name: users[socket.id],
-                                                      id: socket.id});
+      this.socket.broadcast.to(id).emit("sended message", {message: message, 
+                                                      name: users[this.socket.id],
+                                                      id: this.socket.id});
     }
+  }
+  
+  disconnect(){
+    delete users[this.socket.id];
+    this.socket.broadcast.emit("disconnected", this.socket.id);
+    console.log('user disconnected ->', this.socket.id);
+  }
+}
+
+
+io.on('connection', (socket) => {
+  console.log('a user connected ->', socket.id);
+  
+  var user = new User(socket);
+    
+  socket.on("submit name", (response) => {
+    user.registerUser(response);
+  });
+  
+  socket.on("send message", (response) => {
+    user.sendMessage(response);
   });
   
   socket.on('disconnect', () => {
-    delete users[socket.id];
-    socket.broadcast.emit("disconnected", socket.id);
-    console.log('user disconnected ->', socket.id);
+    user.disconnect();
   });
 });
 
