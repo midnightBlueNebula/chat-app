@@ -1,4 +1,8 @@
+var nameFormDiv = document.querySelector("#name-form-div");
 var nameForm = document.querySelector("#name-form");
+
+var appDiv = document.querySelector("#app-container");
+var userNameDiv = document.querySelector("#user-name");
 var chatForm = document.querySelector("#chat-form");
 var chat = document.querySelector("#chat");
 var onlineUsers = document.querySelector("#online-users");
@@ -83,6 +87,16 @@ chatForm.addEventListener("submit", function (event) {
   chat.appendChild(messageDiv);
 
   socket.emit("send message", {message, usersAddedToChat});
+});
+
+
+socket.on("submitted name for user", (response) => {
+  let name = response.name;
+  let id = response.id;
+  
+  nameFormDiv.style.display = "none";
+  appDiv.style.display = "block";
+  userNameDiv.innerText = name;
 });
 
 

@@ -29,29 +29,36 @@
 
   </head>
   <body>
-    <form id="name-form" action="/" method="POST">
-      <input type="text" name="name"/>
-      <input type="submit" name="submit-name"/>
-    </form>
+    <div id="name-form-div">
+      <form id="name-form" action="/" method="POST">
+        <input id="input-name" type="text" name="name"/>
+        <br />
+        <input id="submit-name" type="submit" name="submit-name"/>
+      </form>
+    </div>
     
-    <div id="online-users-div">
-      <div id="online-users">
+    <div id="app-container">
+      <div id="online-users-div">
+        <div id="online-users">
+        </div>
       </div>
-    </div>
-    
-    <div id="chat-div">
-      <div id="chat"></div>
-      <textarea form="chat-form" name="message"></textarea>
-    </div>
-    
-    <div id="added-users-div">
-      <div id="added-users">
+
+      <div id="chat-div">
+        <div id="user-name"></div>
+        <div id="chat"></div>
+        <textarea form="chat-form" name="message"></textarea>
+        <form id="chat-form">
+          <input id="submit" type="submit" name="submit" value="send" />
+        </form>
       </div>
+
+      <div id="added-users-div">
+        <div id="added-users">
+        </div>
+      </div>
+
+      
     </div>
-    
-    <form id="chat-form">
-      <input id="submit" type="submit" name="submit" value="send" />
-    </form>
   </body>
   
   <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" ,
