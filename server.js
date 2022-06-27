@@ -40,8 +40,9 @@ class User {
       this.socket.emit("name registered", name);
     } else {
       users[this.socket.id] = name;
-      this.socket.broadcast.emit("submitted name", {name: name, 
-                                                    id: this.socket.id});
+      let response = {name: name, id: this.socket.id};
+      this.socket.emit("submitted name for user", response);
+      this.socket.broadcast.emit("submitted name", response);
     }
   }
   

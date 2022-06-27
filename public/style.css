@@ -2,6 +2,47 @@ body{
   word-break: break-word;
 }
 
+#name-form-div{
+  width: 250px;
+  height: 160px;
+  margin: auto;
+  margin-top: 100px;
+  border: 1px solid grey;
+  border-radius: 5px;
+}
+
+#input-name{
+  font-size: 24px;
+  width: 180px;
+  height: 40px;
+  margin-left: 35px;
+  margin-top: 30px;
+  border: 1px solid purple;
+  color: purple;
+  border-radius: 5px;
+}
+
+#submit-name{
+  color: purple;
+  background-color: white;
+  margin-top: 20px;
+  margin-left: 55px;
+  width: 150px;
+  height: 40px;
+  border: 1px solid purple;
+  border-radius: 5px;
+}
+
+#submit-name:hover{
+  color: white;
+  background-color: purple;
+  cursor: pointer;
+}
+
+#app-container{
+  display: none;
+}
+
 #online-users-div{
   display: inline-block;
   vertical-align: top;
@@ -25,12 +66,23 @@ body{
   height: 500px;
   width: 500px;
   margin: auto;
+  box-shadow: 0px 0px 5px 5px purple;
+}
+
+#user-name{
+  font-size: 24px;
+  height: 50px;
+  width: 500px;
+  color: floralwhite;
+  background-color: #D9027D;
+  text-align: center;
 }
 
 #chat{
-  height: 420px;
+  height: 450px;
   width: 500px;
-  box-shadow: 0px 0px 5px 5px purple;
+  font-size: 18px;
+  color: floralwhite;
   background-color: #D9027D;
   overflow-y: scroll;
 }
@@ -63,21 +115,20 @@ textarea{
   width: 495px;
   height: 80px;
   background-color: #00FFFF;
-  box-shadow: 0px 0px 5px 5px purple;
+  box-shadow: 0px 0px 5px 5px darkcyan;
   color: purple;
   font-size: 18px;
   font-weight: bold;
   resize: none;
-  border: 1px solid #00FFFF;
+  border: 1px solid darkcyan;
 }
 
 #submit{
-  width: 200px;
+  width: 500px;
   height: 50px;
-  margin-left:150px;
-  margin-top: 5px;
-  background-color: purple;
-  border: 1px solid purple;
+  background-color: #00FFFF;
+  box-shadow: 0px 0px 5px 5px darkcyan;
+  border: 1px solid darkcyan;
   border-radius: 5px;
   font-size: 20px;
   font-weight: bold;
