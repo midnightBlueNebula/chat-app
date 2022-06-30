@@ -16,7 +16,7 @@ Array.prototype.remove = function(el){
 
 var users = {}; // socket id -> key, username -> value.
 var blockedUsers = {}; // socket id of blocked user - > key, array of
-                       // blocking users's socket ids -> value.
+                       // blocking users' socket ids -> value.
 
 
 app.register(require("@fastify/static"), {
@@ -86,6 +86,8 @@ class User {
     }
     
     blockedUsers[blockedId].push(this.id);
+    this.socket.broadcast.to(blockedId).emit("blocking news", { name: users[this.id], 
+                                                                socketId: this.id });
   }
   
   unblockUser(response){
@@ -110,6 +112,8 @@ class User {
   
   disconnect(){
     delete users[this.id];
+    delete blockedUsers[this.id];
+    
     this.socket.broadcast.emit("disconnected", this.id);
     console.log('user disconnected ->', this.id);
   }
