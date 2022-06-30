@@ -8,8 +8,11 @@ var chat = document.querySelector("#chat");
 var onlineUsers = document.querySelector("#online-users");
 var addedUsers = document.querySelector("#added-users");
 
-var usersAddedToChat = {};
+
 var userName;
+// key -> socket id, value -> username.
+var usersAddedToChat = {};
+var blockedUsers = {};
 
 
 function getSocketIdByName(name){
@@ -37,7 +40,7 @@ function createButtonForUserEvent(buttonName, className, username, socketId, eve
 function addUserToOnlineList(name, socketId) {
   let user = document.createElement("div");
   let addUserButton = createButtonForUserEvent("Add", "add-button", 
-                                               name, socketId, addUser);
+                                               name, socketId, addUserToChat);
 
   user.innerText = name;
   user.id = "add-" + socketId;
@@ -47,33 +50,51 @@ function addUserToOnlineList(name, socketId) {
 }
 
 
+function removeUserFromClient(socketId){
+  let user = onlineUsers.querySelector(`#add-${socketId}`);
+  onlineUsers.removeChild(user);
+  
+  if(usersAddedToChat[socketId]){
+    user = addedUsers.querySelector(`#del-${socketId}`);
+    addedUsers.removeChild(user);
+    delete usersAddedToChat[socketId];
+  }
+  
+  const messages = chat.querySelectorAll("div.message-"+socketId);
+  
+  if(messages.length){
+    messages.forEach((message) => {chat.removeChild(message)}); 
+  }
+}
+
+
 function addMessageToChat(isUser, name, message){
   let messageDiv = document.createElement("div");
-  let className = "message";
-  
-  messageDiv.className = className;
   messageDiv.innerText = name + " -> " + message;
   
   chat.appendChild(messageDiv);
   
   if(isUser){
-    className += " user-message";
-  } else {
-    const socketId = getSocketIdByName(name);
+    messageDiv.className = "user-message";
+    return;
+  }
+  
+  const socketId = getSocketIdByName(name);
     
-    const addButton = createButtonForUserEvent("add", "add add-"+socketId, 
-                                             name, socketId, addUser);
+  messageDiv.className = "message-" + socketId;
+  
+  const addButton = createButtonForUserEvent("add", "add add-"+socketId, 
+                                             name, socketId, addUserToChat);
     
-    const blockButton = createButtonForUserEvent("block", "block block-"+socketId, 
+  const blockButton = createButtonForUserEvent("block", "block block-"+socketId, 
                                                name, socketId, blockUser);
     
-    messageDiv.appendChild(addButton);
-    messageDiv.appendChild(blockButton);
-  }
+  messageDiv.appendChild(addButton);
+  messageDiv.appendChild(blockButton);
 }
 
 
-function addUser(event){
+function addUserToChat(event){
   const socketId = event.target.getAttribute("socketId");
   const name = event.target.getAttribute("name");
   
@@ -86,7 +107,7 @@ function addUser(event){
   
   let user = document.createElement("div");
   let removeUserButton = createButtonForUserEvent("Remove", "remove-button", 
-                                                  name, socketId, removeUser);
+                                                  name, socketId, removeUserFromChat);
 
   user.innerText = name;
   user.id = "del-" + socketId;
@@ -96,7 +117,7 @@ function addUser(event){
 }
 
 
-function removeUser(event){
+function removeUserFromChat(event){
   const socketId = event.target.getAttribute("socketId");
   const user = addedUsers.querySelector(`#del-${socketId}`);
   
@@ -107,6 +128,16 @@ function removeUser(event){
 
 function blockUser(event){
   const socketId = event.target.getAttribute("socketId");
+  const name     = event.target.getAttribute("name");
+  
+  if(blockedUsers[socketId]){
+    alert("User has already been blocked.");
+    return;
+  }
+  
+  blockedUsers[socketId] = name;
+  removeUserFromClient(socketId);
+  
   socket.emit("block user", socketId);
 }
 
@@ -119,6 +150,11 @@ nameForm.addEventListener("submit", function (event) {
   if(userName.toLowerCase() == "you"){
     alert("Messages sended by users will be rendered in their device with the sender name 'You'. To prevent confusion please enter another name.");
     return;
+  }
+  
+  if(userName == ""){
+    alert("You must enter a username.");
+    return
   }
 
   socket.emit("submit name", userName);
@@ -170,6 +206,15 @@ socket.on("sended message", (response) => {
 });
 
 
+socket.on("blocking news", (response) => {
+  const {name, socketId} = response;
+  const alertMessage = name + " has blocked you.";
+  
+  alert(alertMessage);
+  removeUserFromClient(socketId);
+})
+
+
 socket.on("You are blocked", (response) => {
   const alertMessage = "You are blocked by " + response + ".";
   
@@ -185,20 +230,13 @@ socket.on("connected", (response) => {
 })
 
 
-socket.on("disconnected", (response) => {
-  let user = onlineUsers.querySelector(`#add-${response}`);
-  onlineUsers.removeChild(user);
-  
-  if(usersAddedToChat[response]){
-    user = addedUsers.querySelector(`#del-${response}`);
-    addedUsers.removeChild(user);
-    delete usersAddedToChat[response];
-  }
-});
-
-
 socket.on("name registered", (response) => {
   let alertMessage = "Username '" + response + "' has already been in use."; 
   alertMessage += " Please enter another username.";
   alert(alertMessage)
+});
+
+
+socket.on("disconnected", (response) => {
+  removeUserFromClient(response);
 });
