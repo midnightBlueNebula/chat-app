@@ -12,25 +12,70 @@ var usersAddedToChat = {};
 var userName;
 
 
-function addUserToOnlineList(name, id) {
+function getSocketIdByName(name){
+  const target = onlineUsers.querySelector(`button[name='${name}']`)
+  
+  if(target){
+    return target.getAttribute("socketId"); 
+  }
+}
+
+
+function createButtonForUserEvent(buttonName, className, username, socketId, event){
+  let button = document.createElement("button");
+  
+  button.innerText = buttonName;
+  button.className = className; 
+  button.setAttribute("name", username);
+  button.setAttribute("socketId", socketId);
+  button.addEventListener("click", event);
+  
+  return button;
+}
+
+
+function addUserToOnlineList(name, socketId) {
   let user = document.createElement("div");
-  let addUserButton = document.createElement("button");
+  let addUserButton = createButtonForUserEvent("Add", "add-button", 
+                                               name, socketId, addUser);
 
   user.innerText = name;
-  user.id = "add-" + id;
-  addUserButton.innerText = "Add";
-  addUserButton.setAttribute("socketId", id);
-  addUserButton.setAttribute("name", name);
-  addUserButton.addEventListener("click", addUser);
+  user.id = "add-" + socketId;
 
   user.appendChild(addUserButton);
   onlineUsers.appendChild(user);
 }
 
 
+function addMessageToChat(isUser, name, message){
+  let messageDiv = document.createElement("div");
+  let className = "message";
+  
+  messageDiv.className = className;
+  messageDiv.innerText = name + " -> " + message;
+  
+  chat.appendChild(messageDiv);
+  
+  if(isUser){
+    className += " user-message";
+  } else {
+    const socketId = getSocketIdByName(name);
+    
+    const addButton = createButtonForUserEvent("add", "add add-"+socketId, 
+                                             name, socketId, addUser);
+    
+    const blockButton = createButtonForUserEvent("block", "block block-"+socketId, 
+                                               name, socketId, blockUser);
+    
+    messageDiv.appendChild(addButton);
+    messageDiv.appendChild(blockButton);
+  }
+}
+
+
 function addUser(event){
-  let socketId = event.target.getAttribute("socketId");
-  let name = event.target.getAttribute("name");
+  const socketId = event.target.getAttribute("socketId");
+  const name = event.target.getAttribute("name");
   
   if(usersAddedToChat[socketId]){
     alert("User has already been added to chat.")
@@ -40,14 +85,11 @@ function addUser(event){
   usersAddedToChat[socketId] = name;
   
   let user = document.createElement("div");
-  let removeUserButton = document.createElement("button");
+  let removeUserButton = createButtonForUserEvent("Remove", "remove-button", 
+                                                  name, socketId, removeUser);
 
   user.innerText = name;
   user.id = "del-" + socketId;
-  removeUserButton.innerText = "Remove";
-  removeUserButton.setAttribute("socketId", socketId);
-  removeUserButton.setAttribute("name", name);
-  removeUserButton.addEventListener("click", removeUser);
 
   user.appendChild(removeUserButton);
   addedUsers.appendChild(user);
@@ -55,18 +97,29 @@ function addUser(event){
 
 
 function removeUser(event){
-  let socketId = event.target.getAttribute("socketId");
-  let user = addedUsers.querySelector(`#del-${socketId}`);
+  const socketId = event.target.getAttribute("socketId");
+  const user = addedUsers.querySelector(`#del-${socketId}`);
   
   delete usersAddedToChat[socketId];
   addedUsers.removeChild(user);
 }
 
 
+function blockUser(event){
+  const socketId = event.target.getAttribute("socketId");
+  socket.emit("block user", socketId);
+}
+
+
 nameForm.addEventListener("submit", function (event) {
   event.preventDefault();
   
-  userName = nameForm.name.value;
+  userName = nameForm.name.value.trim();
+  
+  if(userName.toLowerCase() == "you"){
+    alert("Messages sended by users will be rendered in their device with the sender name 'You'. To prevent confusion please enter another name.");
+    return;
+  }
 
   socket.emit("submit name", userName);
 });
@@ -80,19 +133,21 @@ chatForm.addEventListener("submit", function (event) {
     return;
   }
   
-  let message = chatForm.message.value;
-  let messageDiv = document.createElement("div");
+  let message = chatForm.message.value.trim();
   
-  messageDiv.innerText = userName + " -> " + message;
-  chat.appendChild(messageDiv);
+  if(message == ""){
+    alert("You can't send empty message");
+    return;
+  }
+  
+  addMessageToChat(true, "You", message);
 
   socket.emit("send message", {message, usersAddedToChat});
 });
 
 
 socket.on("submitted name for user", (response) => {
-  let name = response.name;
-  let id = response.id;
+  const name = response
   
   nameFormDiv.style.display = "none";
   appDiv.style.display = "block";
@@ -111,15 +166,19 @@ socket.on("submitted name", (response) => {
 socket.on("sended message", (response) => {
   const {message, name, id} = response;
   
-  let messageDiv = document.createElement("div");
-  messageDiv.innerText = name + " -> " + message;
-  
-  chat.appendChild(messageDiv);
+  addMessageToChat(false, name, message);
 });
 
 
+socket.on("You are blocked", (response) => {
+  const alertMessage = "You are blocked by " + response + ".";
+  
+  alert(alertMessage);
+})
+
+
 socket.on("connected", (response) => {
-  const {id, users} = response;
+  const users = response;
   for(let id in users){
     addUserToOnlineList(users[id], id);
   }

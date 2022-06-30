@@ -2,8 +2,21 @@ const path = require("path");
 var app = require('fastify')();
 var io = require('socket.io')(app.server);
 
+// Removes first element equals to argument from array.
+Array.prototype.remove = function(el){
+  const index = this.indexOf(el);
+  
+  if(index == -1){
+    return false;
+  }
 
-var users = {};
+  this.splice(index, 1);
+  return true;
+}
+
+var users = {}; // socket id -> key, username -> value.
+var blockedUsers = {}; // socket id of blocked user - > key, array of
+                       // blocking users's socket ids -> value.
 
 
 app.register(require("@fastify/static"), {
@@ -32,16 +45,18 @@ if (seo.url === "glitch-default") {
 class User {
   constructor(socket){
     this.socket = socket;
-    this.socket.emit("connected", {id: this.socket.id, users: users});
+    this.id = socket.id;
+    this.socket.emit("connected", users);
   }
   
   registerUser(name){
     if(Object.values(users).indexOf(name) != -1){
       this.socket.emit("name registered", name);
     } else {
-      users[this.socket.id] = name;
-      let response = {name: name, id: this.socket.id};
-      this.socket.emit("submitted name for user", response);
+      this.name = name;
+      users[this.id] = name;
+      const response = {name: name, id: this.id};
+      this.socket.emit("submitted name for user", name);
       this.socket.broadcast.emit("submitted name", response);
     }
   }
@@ -50,16 +65,53 @@ class User {
     const {message, usersAddedToChat} = response;
     
     for(let id in usersAddedToChat){
+      if(this.isBlockedBy(id)){
+        this.socket.emit("You are blocked", users[id]);
+        continue;
+      }
+      
       this.socket.broadcast.to(id).emit("sended message", {message: message, 
-                                                      name: users[this.socket.id],
-                                                      id: this.socket.id});
+                                                      name: users[this.id],
+                                                      id: this.id});
     }
   }
   
+  blockUser(response){
+    const blockedId = response;
+    
+    if(!blockedUsers[blockedId]){
+      blockedUsers[blockedId] = [];
+    } else if(this.isBlocked(blockedId)) {
+      return;
+    }
+    
+    blockedUsers[blockedId].push(this.id);
+  }
+  
+  unblockUser(response){
+    const blockedId = response;
+    
+    if(!blockedUsers[blockedId]){
+      return;
+    } 
+    
+    blockedUsers[blockedId].remove(this.id);
+  }
+  
+  // returns true if argument id is blocked by this user.
+  isBlocked(blockedId){
+    return blockedUsers[blockedId] && blockedUsers[blockedId].indexOf(this.id) != -1; 
+  }
+  
+  // returns true if this user is blocked by argument id.
+  isBlockedBy(blockerId){
+    return blockedUsers[this.id] && blockedUsers[this.id].indexOf(blockerId) != -1; 
+  }
+  
   disconnect(){
-    delete users[this.socket.id];
-    this.socket.broadcast.emit("disconnected", this.socket.id);
-    console.log('user disconnected ->', this.socket.id);
+    delete users[this.id];
+    this.socket.broadcast.emit("disconnected", this.id);
+    console.log('user disconnected ->', this.id);
   }
 }
 
@@ -76,6 +128,10 @@ io.on('connection', (socket) => {
   socket.on("send message", (response) => {
     user.sendMessage(response);
   });
+  
+  socket.on("block user", (response) => {
+    user.blockUser(response);
+  })
   
   socket.on('disconnect', () => {
     user.disconnect();
